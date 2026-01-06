@@ -1,0 +1,211 @@
+/**
+ * Styles for the ReportDisplay component
+ */
+
+.report-display {
+  background: rgba(255, 255, 255, 0.95);
+  padding: 30px;
+  border-radius: 15px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+  animation: slideIn 0.5s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.report-display h2 {
+  color: #333;
+  margin-bottom: 25px;
+  font-size: 1.8rem;
+  text-align: center;
+}
+
+/* Score Section */
+.score-section {
+  text-align: center;
+  margin-bottom: 30px;
+  padding: 20px;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  border-radius: 15px;
+}
+
+.score-circle {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 15px;
+  font-weight: bold;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.score-excellent {
+  background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+  color: white;
+}
+
+.score-good {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  color: white;
+}
+
+.score-fair {
+  background: linear-gradient(135deg, #fad961 0%, #f76b1c 100%);
+  color: white;
+}
+
+.score-poor {
+  background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
+  color: white;
+}
+
+.score-value {
+  font-size: 2.5rem;
+  line-height: 1;
+}
+
+.score-label {
+  font-size: 1rem;
+  opacity: 0.9;
+}
+
+.score-description {
+  font-size: 1.1rem;
+  color: #555;
+  font-weight: 500;
+}
+
+/* Report Sections */
+.report-section {
+  margin-bottom: 25px;
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 10px;
+  border-left: 4px solid #667eea;
+}
+
+.report-section h3 {
+  color: #333;
+  margin-bottom: 15px;
+  font-size: 1.3rem;
+}
+
+.stat-value {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #667eea;
+  margin-bottom: 8px;
+}
+
+.stat-note {
+  color: #666;
+  font-size: 0.95rem;
+}
+
+/* Sections List */
+.sections-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.section-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 1.1rem;
+  padding: 10px;
+  background: white;
+  border-radius: 8px;
+}
+
+.check-pass {
+  font-size: 1.3rem;
+}
+
+.check-fail {
+  font-size: 1.3rem;
+}
+
+/* Long Sentences */
+.long-sentences {
+  margin-top: 15px;
+  padding: 15px;
+  background: white;
+  border-radius: 8px;
+}
+
+.long-sentences-title {
+  font-weight: 600;
+  color: #555;
+  margin-bottom: 10px;
+}
+
+.long-sentences ul {
+  list-style: none;
+  padding-left: 0;
+}
+
+.long-sentence-item {
+  padding: 10px;
+  margin-bottom: 8px;
+  background: #fff3cd;
+  border-left: 3px solid #ffc107;
+  border-radius: 5px;
+  font-style: italic;
+  color: #856404;
+}
+
+/* Feedback Section */
+.feedback-section {
+  background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+  border-left-color: #2196f3;
+}
+
+.feedback-content {
+  background: white;
+  padding: 15px;
+  border-radius: 8px;
+}
+
+.feedback-line {
+  margin-bottom: 10px;
+  line-height: 1.6;
+  color: #333;
+}
+
+.feedback-line:last-child {
+  margin-bottom: 0;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .report-display {
+    padding: 20px;
+  }
+
+  .report-display h2 {
+    font-size: 1.5rem;
+  }
+
+  .score-circle {
+    width: 100px;
+    height: 100px;
+  }
+
+  .score-value {
+    font-size: 2rem;
+  }
+}
+
