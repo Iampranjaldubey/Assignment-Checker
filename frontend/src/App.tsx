@@ -4,7 +4,7 @@
  * and renders the assignment submission form and report display
  */
 
-import React, { useState } from 'react'
+import { useState } from 'react'
 import AssignmentForm from './components/AssignmentForm'
 import ReportDisplay from './components/ReportDisplay'
 import './App.css'

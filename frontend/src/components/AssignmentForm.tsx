@@ -4,7 +4,7 @@
  * It collects student name and assignment text, then sends it to the backend API
  */
 
-import React, { useState } from 'react'
+import { useState } from 'react'
 import './AssignmentForm.css'
 
 // Type definition for AI feedback structure

@@ -4,7 +4,6 @@
  * It shows word count, section checks, long sentences, overall score, and feedback
  */
 
-import React from 'react'
 import './ReportDisplay.css'
 
 // Type definition for AI feedback structure
