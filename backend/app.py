@@ -12,6 +12,8 @@ import sqlite3
 import re
 from datetime import datetime
 import os
+# Import our AI feedback module (using Google Gemini)
+from gemini_feedback import generate_ai_feedback
 
 # Initialize Flask app
 app = Flask(__name__)
@@ -41,6 +43,7 @@ def init_db():
     ''')
     
     # Create reports table to store analysis results
+    # Added AI feedback fields: ai_overall_evaluation, ai_strengths, ai_weaknesses, ai_suggestions
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS reports (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -53,10 +56,28 @@ def init_db():
             long_sentences TEXT,
             overall_score INTEGER,
             feedback TEXT,
+            ai_overall_evaluation TEXT,
+            ai_strengths TEXT,
+            ai_weaknesses TEXT,
+            ai_suggestions TEXT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (assignment_id) REFERENCES assignments (id)
         )
     ''')
+    
+    # Add AI feedback columns to existing reports table if they don't exist
+    # This is a migration: checks if columns exist before adding them
+    cursor.execute("PRAGMA table_info(reports)")
+    columns = [column[1] for column in cursor.fetchall()]
+    
+    if 'ai_overall_evaluation' not in columns:
+        cursor.execute('ALTER TABLE reports ADD COLUMN ai_overall_evaluation TEXT')
+    if 'ai_strengths' not in columns:
+        cursor.execute('ALTER TABLE reports ADD COLUMN ai_strengths TEXT')
+    if 'ai_weaknesses' not in columns:
+        cursor.execute('ALTER TABLE reports ADD COLUMN ai_weaknesses TEXT')
+    if 'ai_suggestions' not in columns:
+        cursor.execute('ALTER TABLE reports ADD COLUMN ai_suggestions TEXT')
     
     conn.commit()
     conn.close()
@@ -247,16 +268,44 @@ def submit_assignment():
         
         assignment_id = cursor.lastrowid
         
-        # Analyze assignment
+        # Analyze assignment (rule-based checks)
         analysis = analyze_assignment(assignment_text)
         
-        # Save report to database
+        # Generate AI feedback
+        # We use a try-except block here because AI feedback might fail
+        # but we still want to save the assignment with basic analysis
+        ai_feedback = None
+        ai_error = None
+        
+        try:
+            ai_feedback = generate_ai_feedback(assignment_text)
+        except Exception as e:
+            # Log the error but don't fail the entire request
+            ai_error = str(e)
+            print(f"AI feedback generation failed: {ai_error}")
+        
+        # Prepare AI feedback data for database storage
+        # We store lists as JSON strings in the database
+        ai_overall_eval = None
+        ai_strengths_json = None
+        ai_weaknesses_json = None
+        ai_suggestions_json = None
+        
+        if ai_feedback:
+            import json as json_lib
+            ai_overall_eval = ai_feedback.get('overall_evaluation')
+            ai_strengths_json = json_lib.dumps(ai_feedback.get('strengths', []))
+            ai_weaknesses_json = json_lib.dumps(ai_feedback.get('weaknesses', []))
+            ai_suggestions_json = json_lib.dumps(ai_feedback.get('suggestions', []))
+        
+        # Save report to database (including AI feedback)
         cursor.execute('''
             INSERT INTO reports (
                 assignment_id, word_count, has_introduction, has_body, 
                 has_conclusion, long_sentences_count, long_sentences, 
-                overall_score, feedback
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                overall_score, feedback, ai_overall_evaluation, 
+                ai_strengths, ai_weaknesses, ai_suggestions
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ''', (
             assignment_id,
             analysis['word_count'],
@@ -266,19 +315,25 @@ def submit_assignment():
             analysis['long_sentences_count'],
             '\n'.join(analysis['long_sentences']),
             analysis['overall_score'],
-            analysis['feedback']
+            analysis['feedback'],
+            ai_overall_eval,
+            ai_strengths_json,
+            ai_weaknesses_json,
+            ai_suggestions_json
         ))
         
         report_id = cursor.lastrowid
         conn.commit()
         conn.close()
         
-        # Return success response with report
+        # Return success response with report and AI feedback
         return jsonify({
             'success': True,
             'assignment_id': assignment_id,
             'report_id': report_id,
-            'report': analysis
+            'report': analysis,
+            'ai_feedback': ai_feedback,  # Will be None if AI failed
+            'ai_error': ai_error  # Will be None if AI succeeded
         }), 201
         
     except Exception as e:
@@ -304,6 +359,9 @@ def get_report(assignment_id):
             return jsonify({'error': 'Report not found'}), 404
         
         # Convert to dictionary
+        # Handle cases where AI feedback columns might not exist (for older records)
+        import json as json_lib
+        
         report_dict = {
             'id': report[0],
             'assignment_id': report[1],
@@ -315,8 +373,35 @@ def get_report(assignment_id):
             'long_sentences': report[7].split('\n') if report[7] else [],
             'overall_score': report[8],
             'feedback': report[9],
-            'created_at': report[10]
         }
+        
+        # Add AI feedback fields if they exist
+        # Check the length of the report tuple to see if AI fields are present
+        if len(report) > 10:
+            # Parse JSON strings back to lists
+            ai_feedback_dict = {}
+            if report[10]:  # ai_overall_evaluation
+                ai_feedback_dict['overall_evaluation'] = report[10]
+            if report[11]:  # ai_strengths
+                try:
+                    ai_feedback_dict['strengths'] = json_lib.loads(report[11])
+                except:
+                    ai_feedback_dict['strengths'] = []
+            if report[12]:  # ai_weaknesses
+                try:
+                    ai_feedback_dict['weaknesses'] = json_lib.loads(report[12])
+                except:
+                    ai_feedback_dict['weaknesses'] = []
+            if report[13]:  # ai_suggestions
+                try:
+                    ai_feedback_dict['suggestions'] = json_lib.loads(report[13])
+                except:
+                    ai_feedback_dict['suggestions'] = []
+            
+            if ai_feedback_dict:
+                report_dict['ai_feedback'] = ai_feedback_dict
+        
+        report_dict['created_at'] = report[-1] if len(report) > 10 else report[10]
         
         return jsonify(report_dict), 200
         
@@ -353,6 +438,57 @@ def get_assignments():
             })
         
         return jsonify(assignments_list), 200
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/check', methods=['POST'])
+def check_assignment():
+    """
+    API endpoint to check an assignment without saving to database.
+    This is a lightweight endpoint that returns analysis results including AI feedback.
+    
+    Accepts POST request with JSON containing assignment_text.
+    Returns analysis report with both rule-based checks and AI feedback.
+    """
+    try:
+        data = request.get_json()
+        
+        # Validate input
+        if not data:
+            return jsonify({'error': 'No data provided'}), 400
+        
+        assignment_text = data.get('assignment_text', '').strip()
+        
+        if not assignment_text:
+            return jsonify({'error': 'Assignment text is required'}), 400
+        
+        # Perform rule-based analysis (word count, sections, long sentences)
+        analysis = analyze_assignment(assignment_text)
+        
+        # Generate AI feedback
+        # We use a try-except block here because AI feedback might fail
+        # (e.g., API key issues, network problems) but we still want to return the basic analysis
+        ai_feedback = None
+        ai_error = None
+        
+        try:
+            ai_feedback = generate_ai_feedback(assignment_text)
+        except Exception as e:
+            # Log the error but don't fail the entire request
+            # This way, users still get the basic analysis even if AI is unavailable
+            ai_error = str(e)
+            print(f"AI feedback generation failed: {ai_error}")
+        
+        # Prepare the response
+        response_data = {
+            'success': True,
+            'report': analysis,
+            'ai_feedback': ai_feedback,  # Will be None if AI failed
+            'ai_error': ai_error  # Will be None if AI succeeded
+        }
+        
+        return jsonify(response_data), 200
         
     except Exception as e:
         return jsonify({'error': str(e)}), 500

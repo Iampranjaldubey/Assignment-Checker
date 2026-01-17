@@ -7,6 +7,14 @@
 import React, { useState } from 'react'
 import './AssignmentForm.css'
 
+// Type definition for AI feedback structure
+interface AIFeedback {
+  overall_evaluation: string
+  strengths: string[]
+  weaknesses: string[]
+  suggestions: string[]
+}
+
 // Type definition for the report structure
 interface Report {
   word_count: number
@@ -19,6 +27,7 @@ interface Report {
   long_sentences: string[]
   overall_score: number
   feedback: string
+  ai_feedback?: AIFeedback | null  // Optional: AI feedback might not always be available
 }
 
 // Props interface for the component
@@ -76,8 +85,15 @@ function AssignmentForm({ onSubmission, onError, onLoading }: AssignmentFormProp
         throw new Error(data.error || 'Failed to submit assignment')
       }
 
-      // Success! Pass the report to parent component
-      onSubmission(data.report)
+      // Success! Prepare the report with AI feedback if available
+      // The backend returns: { success: true, report: {...}, ai_feedback: {...} }
+      const reportWithAI = {
+        ...data.report,
+        ai_feedback: data.ai_feedback || null  // Include AI feedback if present
+      }
+
+      // Pass the report (with AI feedback) to parent component
+      onSubmission(reportWithAI)
       
       // Reset form
       setStudentName('')

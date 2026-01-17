@@ -9,6 +9,14 @@ import AssignmentForm from './components/AssignmentForm'
 import ReportDisplay from './components/ReportDisplay'
 import './App.css'
 
+// Type definition for AI feedback structure
+interface AIFeedback {
+  overall_evaluation: string
+  strengths: string[]
+  weaknesses: string[]
+  suggestions: string[]
+}
+
 // Type definition for the report data structure
 interface Report {
   word_count: number
@@ -21,6 +29,7 @@ interface Report {
   long_sentences: string[]
   overall_score: number
   feedback: string
+  ai_feedback?: AIFeedback | null  // Optional: AI feedback might not always be available
 }
 
 function App() {

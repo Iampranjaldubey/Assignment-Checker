@@ -7,6 +7,14 @@
 import React from 'react'
 import './ReportDisplay.css'
 
+// Type definition for AI feedback structure
+interface AIFeedback {
+  overall_evaluation: string
+  strengths: string[]
+  weaknesses: string[]
+  suggestions: string[]
+}
+
 // Type definition for the report structure
 interface Report {
   word_count: number
@@ -19,6 +27,7 @@ interface Report {
   long_sentences: string[]
   overall_score: number
   feedback: string
+  ai_feedback?: AIFeedback | null  // Optional: AI feedback might not always be available
 }
 
 // Props interface for the component
@@ -129,6 +138,62 @@ function ReportDisplay({ report }: ReportDisplayProps) {
           ))}
         </div>
       </div>
+
+      {/* AI Feedback Card */}
+      {report.ai_feedback && (
+        <div className="report-section ai-feedback-section">
+          <h3>🤖 AI Feedback</h3>
+          <div className="ai-feedback-content">
+            {/* Overall Evaluation */}
+            <div className="ai-feedback-item">
+              <h4 className="ai-feedback-title">Overall Evaluation</h4>
+              <p className="ai-feedback-text">{report.ai_feedback.overall_evaluation}</p>
+            </div>
+
+            {/* Strengths */}
+            {report.ai_feedback.strengths && report.ai_feedback.strengths.length > 0 && (
+              <div className="ai-feedback-item">
+                <h4 className="ai-feedback-title strengths-title">✅ Strengths</h4>
+                <ul className="ai-feedback-list">
+                  {report.ai_feedback.strengths.map((strength, index) => (
+                    <li key={index} className="ai-feedback-list-item">
+                      {strength}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* Weaknesses */}
+            {report.ai_feedback.weaknesses && report.ai_feedback.weaknesses.length > 0 && (
+              <div className="ai-feedback-item">
+                <h4 className="ai-feedback-title weaknesses-title">⚠️ Areas for Improvement</h4>
+                <ul className="ai-feedback-list">
+                  {report.ai_feedback.weaknesses.map((weakness, index) => (
+                    <li key={index} className="ai-feedback-list-item">
+                      {weakness}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* Suggestions */}
+            {report.ai_feedback.suggestions && report.ai_feedback.suggestions.length > 0 && (
+              <div className="ai-feedback-item">
+                <h4 className="ai-feedback-title suggestions-title">💡 Suggestions</h4>
+                <ul className="ai-feedback-list">
+                  {report.ai_feedback.suggestions.map((suggestion, index) => (
+                    <li key={index} className="ai-feedback-list-item">
+                      {suggestion}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
