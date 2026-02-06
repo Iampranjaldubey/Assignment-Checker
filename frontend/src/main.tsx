@@ -1,10 +1,11 @@
 /**
  * Main entry point for the React application
- * This file renders the App component into the DOM
+ * This file renders the App component into the DOM with React Router
  */
 
 import React from 'react'
 import ReactDOM from 'react-dom/client'
+import { BrowserRouter } from 'react-router-dom'
 import App from './App'
 import './index.css'
 
@@ -12,11 +13,12 @@ import './index.css'
 const rootElement = document.getElementById('root')
 
 if (rootElement) {
-  // Create a React root and render the App component
+  // Create a React root and render the App component wrapped in BrowserRouter
   ReactDOM.createRoot(rootElement).render(
     <React.StrictMode>
-      <App />
+      <BrowserRouter>
+        <App />
+      </BrowserRouter>
     </React.StrictMode>
   )
 }
-

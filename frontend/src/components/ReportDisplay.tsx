@@ -1,35 +1,12 @@
 /**
  * ReportDisplay Component
- * This component displays the analysis report for a submitted assignment
- * It shows word count, section checks, long sentences, overall score, and feedback
+ * Reusable presentation component for displaying report data
+ * Shows rule-based analysis and AI feedback
  */
 
 import './ReportDisplay.css'
+import type { Report } from '../types'
 
-// Type definition for AI feedback structure
-interface AIFeedback {
-  overall_evaluation: string
-  strengths: string[]
-  weaknesses: string[]
-  suggestions: string[]
-}
-
-// Type definition for the report structure
-interface Report {
-  word_count: number
-  sections: {
-    has_introduction: boolean
-    has_body: boolean
-    has_conclusion: boolean
-  }
-  long_sentences_count: number
-  long_sentences: string[]
-  overall_score: number
-  feedback: string
-  ai_feedback?: AIFeedback | null  // Optional: AI feedback might not always be available
-}
-
-// Props interface for the component
 interface ReportDisplayProps {
   report: Report
 }
@@ -198,4 +175,3 @@ function ReportDisplay({ report }: ReportDisplayProps) {
 }
 
 export default ReportDisplay
-

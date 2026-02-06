@@ -1,67 +1,23 @@
 /**
  * Main App Component
- * This is the root component that manages the overall application state
- * and renders the assignment submission form and report display
+ * Defines all routes and navigation for the application
  */
 
-import { useState } from 'react'
+import { Routes, Route, Link, useNavigate } from 'react-router-dom'
 import AssignmentForm from './components/AssignmentForm'
-import ReportDisplay from './components/ReportDisplay'
+import AssignmentsList from './components/AssignmentsList'
+import ReportPage from './components/ReportPage'
 import './App.css'
 
-// Type definition for AI feedback structure
-interface AIFeedback {
-  overall_evaluation: string
-  strengths: string[]
-  weaknesses: string[]
-  suggestions: string[]
-}
-
-// Type definition for the report data structure
-interface Report {
-  word_count: number
-  sections: {
-    has_introduction: boolean
-    has_body: boolean
-    has_conclusion: boolean
-  }
-  long_sentences_count: number
-  long_sentences: string[]
-  overall_score: number
-  feedback: string
-  ai_feedback?: AIFeedback | null  // Optional: AI feedback might not always be available
-}
-
 function App() {
-  // State to store the report after submission
-  const [report, setReport] = useState<Report | null>(null)
-  // State to track loading status
-  const [loading, setLoading] = useState(false)
-  // State to store any error messages
-  const [error, setError] = useState<string | null>(null)
+  const navigate = useNavigate()
 
   /**
-   * Callback function called when an assignment is submitted
-   * This receives the report data from the AssignmentForm component
+   * Handle successful assignment submission
+   * Navigate to assignments list after submission
    */
-  const handleSubmission = (reportData: Report) => {
-    setReport(reportData)
-    setError(null)
-  }
-
-  /**
-   * Callback function called when an error occurs during submission
-   */
-  const handleError = (errorMessage: string) => {
-    setError(errorMessage)
-    setReport(null)
-  }
-
-  /**
-   * Callback function to update loading state
-   */
-  const handleLoading = (isLoading: boolean) => {
-    setLoading(isLoading)
+  const handleSubmissionSuccess = () => {
+    navigate('/assignments')
   }
 
   return (
@@ -69,36 +25,29 @@ function App() {
       <header className="app-header">
         <h1>📝 Assignment Checker</h1>
         <p>Submit your assignment and get instant feedback!</p>
+        <nav className="app-nav">
+          <Link to="/" className="nav-link">Submit</Link>
+          <Link to="/assignments" className="nav-link">History</Link>
+        </nav>
       </header>
 
       <main className="app-main">
-        {/* Assignment submission form */}
-        <AssignmentForm
-          onSubmission={handleSubmission}
-          onError={handleError}
-          onLoading={handleLoading}
-        />
+        <Routes>
+          {/* Home route - Assignment submission */}
+          <Route
+            path="/"
+            element={<AssignmentForm onSubmissionSuccess={handleSubmissionSuccess} />}
+          />
 
-        {/* Display error message if submission failed */}
-        {error && (
-          <div className="error-message">
-            <p>❌ Error: {error}</p>
-          </div>
-        )}
+          {/* Assignments list route */}
+          <Route path="/assignments" element={<AssignmentsList />} />
 
-        {/* Display loading indicator */}
-        {loading && (
-          <div className="loading">
-            <p>⏳ Analyzing your assignment...</p>
-          </div>
-        )}
-
-        {/* Display report if available */}
-        {report && <ReportDisplay report={report} />}
+          {/* Report detail route */}
+          <Route path="/report/:id" element={<ReportPage />} />
+        </Routes>
       </main>
     </div>
   )
 }
 
 export default App
-
